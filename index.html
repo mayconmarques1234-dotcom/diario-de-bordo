@@ -1322,8 +1322,8 @@ function promptRelatorio(ents,inicio,fim,ctx) {
 }
 
 // ── CONFIG ───────────────────────────────────────
-let aiProvider = localStorage.getItem('db_provider') || 'gemini';
-let apiKey = localStorage.getItem('db_apikey') || '';
+var aiProvider = localStorage.getItem('db_provider') || 'gemini';
+var apiKey = localStorage.getItem('db_apikey') || '';
 
 function selectProvider(p) {
   aiProvider = p;
