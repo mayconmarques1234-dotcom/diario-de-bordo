@@ -856,6 +856,11 @@ select {
             <div class="p-name">OpenAI GPT-4</div>
             <div class="p-desc">Pago · Alta qualidade</div>
           </button>
+          <button class="provider-btn" id="prov-groq" onclick="selectProvider('groq')" style="grid-column:1/-1">
+            <span class="p-icon">⚡</span>
+            <div class="p-name">Groq — LLaMA 3</div>
+            <div class="p-desc">Gratuito · Mais rápido · Recomendado</div>
+          </button>
         </div>
       </div>
 
@@ -886,6 +891,13 @@ select {
         2. Faça login e clique em <strong>"Create new secret key"</strong><br>
         3. Copie e cole a chave acima (começa com <code>sk-...</code>)<br>
         4. Requer saldo mínimo de ~$5 na conta
+      </div>
+      <div id="info-groq" class="info-box" style="display:none">
+        <strong>Como obter a chave do Groq (gratuito e rápido):</strong><br>
+        1. Acesse <a href="https://console.groq.com" target="_blank">console.groq.com</a><br>
+        2. Crie uma conta gratuita<br>
+        3. Clique em <strong>"API Keys"</strong> → <strong>"Create API Key"</strong><br>
+        4. Copie e cole a chave acima (começa com <code>gsk_...</code>)
       </div>
     </div>
 
@@ -1334,10 +1346,18 @@ function selectProvider(p) {
   btns.forEach(b => b.classList.remove('selected'));
   const btn = document.getElementById('prov-'+p);
   if(btn) btn.classList.add('selected');
+  // update placeholder hint based on provider
+  const inp = document.getElementById('api-key-input');
+  if(inp && !inp.value) {
+    const hints = {gemini:'AIza...', openai:'sk-...', groq:'gsk_...'};
+    inp.placeholder = 'Cole sua chave aqui... (' + (hints[p]||'') + ')';
+  }
   const ig = document.getElementById('info-gemini');
   const io = document.getElementById('info-openai');
   if(ig) ig.style.display = p==='gemini' ? 'block' : 'none';
   if(io) io.style.display = p==='openai' ? 'block' : 'none';
+  const igr = document.getElementById('info-groq');
+  if(igr) igr.style.display = p==='groq' ? 'block' : 'none';
   updateStatus();
 }
 
@@ -1379,7 +1399,8 @@ function updateStatus() {
     el.className='api-status none'; el.textContent='Nenhuma chave configurada';
   } else {
     el.className='api-status ok';
-    el.textContent = (aiProvider==='gemini'?'✓ Gemini':'✓ OpenAI') + ' configurado — ' + apiKey.slice(0,8)+'••••';
+    const names = {gemini:'✓ Gemini', openai:'✓ OpenAI', groq:'✓ Groq'};
+    el.textContent = (names[aiProvider]||'✓ IA') + ' configurado — ' + apiKey.slice(0,8)+'••••';
   }
 }
 
@@ -1396,6 +1417,15 @@ async function callClaude(prompt) {
       const d = await r.json();
       if(d.error) return 'Erro Gemini: ' + d.error.message;
       return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
+    } else if(aiProvider === 'groq') {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey},
+        body: JSON.stringify({model:'llama-3.3-70b-versatile', max_tokens:1000, messages:[{role:'user',content:prompt}]})
+      });
+      const d = await r.json();
+      if(d.error) return 'Erro Groq: ' + d.error.message;
+      return d.choices?.[0]?.message?.content || 'Sem resposta.';
     } else {
       const r = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
