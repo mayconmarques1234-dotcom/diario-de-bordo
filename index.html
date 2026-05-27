@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛞</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛞</text></svg>">
 <meta name="apple-mobile-web-app-title" content="Diário de Bordo">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1328,10 +1329,15 @@ var apiKey = localStorage.getItem('db_apikey') || '';
 function selectProvider(p) {
   aiProvider = p;
   localStorage.setItem('db_provider', p);
-  document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('prov-'+p).classList.add('selected');
-  document.getElementById('info-gemini').style.display = p==='gemini' ? 'block' : 'none';
-  document.getElementById('info-openai').style.display = p==='openai' ? 'block' : 'none';
+  const btns = document.querySelectorAll('.provider-btn');
+  if(!btns.length) return;
+  btns.forEach(b => b.classList.remove('selected'));
+  const btn = document.getElementById('prov-'+p);
+  if(btn) btn.classList.add('selected');
+  const ig = document.getElementById('info-gemini');
+  const io = document.getElementById('info-openai');
+  if(ig) ig.style.display = p==='gemini' ? 'block' : 'none';
+  if(io) io.style.display = p==='openai' ? 'block' : 'none';
   updateStatus();
 }
 
