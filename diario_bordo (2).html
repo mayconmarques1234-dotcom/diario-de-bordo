@@ -560,6 +560,33 @@ select {
   font-family: 'Playfair Display', serif;
   font-size: 17px; font-weight: 500; color: var(--text);
 }
+
+/* ── CONFIG PAGE ───────────────────────────────────── */
+.provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.provider-btn {
+  padding: 14px 12px; border: 2px solid var(--border);
+  border-radius: var(--radius-lg); cursor: pointer;
+  background: var(--surface2); text-align: center;
+  transition: all .15s; font-family: 'DM Sans', sans-serif;
+}
+.provider-btn:hover { border-color: var(--border2); background: var(--surface); }
+.provider-btn.selected { border-color: var(--accent); background: var(--accent-bg); }
+.provider-btn .p-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+.provider-btn .p-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.provider-btn .p-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.provider-btn.selected .p-name { color: var(--accent-t); }
+.api-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  border-radius: var(--radius); font-size: 13px; margin-top: 1rem; }
+.api-status.ok { background: var(--green-bg); color: var(--green-t); }
+.api-status.err { background: var(--red-bg); color: var(--red); }
+.api-status.none { background: var(--surface2); color: var(--text3); }
+.key-row { display: flex; gap: 8px; }
+.key-row input { flex: 1; font-family: 'DM Mono', monospace; font-size: 12px; }
+.info-box { background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .9rem 1rem;
+  font-size: 12px; color: var(--text2); line-height: 1.65; margin-top: .75rem; }
+.info-box a { color: var(--accent); text-decoration: none; }
+.info-box a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -596,6 +623,9 @@ select {
   </button>
 
   <div class="sidebar-bottom">
+    <button class="nav-item" id="nav-config" onclick="go('config')" aria-label="Configurar IA">
+      ⚙️ <span class="nav-tip">Configurar IA</span>
+    </button>
     <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" aria-label="Alternar tema">
       ☀️ <span class="nav-tip">Modo dia / noite</span>
     </button>
@@ -805,6 +835,65 @@ select {
     <div id="export-stats" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace"></div>
   </div>
 
+  <!-- ── CONFIGURAR IA ── -->
+  <div id="page-config" class="page">
+    <div class="page-header">
+      <h1>Configurar IA</h1>
+      <p>Escolha o provedor e insira sua chave de API</p>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label>Provedor de IA</label>
+        <div class="provider-grid">
+          <button class="provider-btn" id="prov-gemini" onclick="selectProvider('gemini')">
+            <span class="p-icon">✦</span>
+            <div class="p-name">Google Gemini</div>
+            <div class="p-desc">Gratuito · Recomendado</div>
+          </button>
+          <button class="provider-btn" id="prov-openai" onclick="selectProvider('openai')">
+            <span class="p-icon">◎</span>
+            <div class="p-name">OpenAI GPT-4</div>
+            <div class="p-desc">Pago · Alta qualidade</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Chave de API</label>
+        <div class="key-row">
+          <input type="password" id="api-key-input" placeholder="Cole sua chave aqui..." />
+          <button class="btn btn-ghost btn-sm" onclick="toggleKeyVisibility()">👁</button>
+          <button class="btn btn-primary btn-sm" onclick="salvarChave()">Salvar</button>
+        </div>
+      </div>
+
+      <div id="api-status" class="api-status none">
+        Nenhuma chave configurada
+      </div>
+
+      <div id="info-gemini" class="info-box" style="display:none">
+        <strong>Como obter a chave do Gemini (gratuito):</strong><br>
+        1. Acesse <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a><br>
+        2. Faça login com sua conta Google<br>
+        3. Clique em <strong>"Get API Key"</strong> → <strong>"Create API key"</strong><br>
+        4. Copie e cole a chave acima
+      </div>
+
+      <div id="info-openai" class="info-box" style="display:none">
+        <strong>Como obter a chave da OpenAI:</strong><br>
+        1. Acesse <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a><br>
+        2. Faça login e clique em <strong>"Create new secret key"</strong><br>
+        3. Copie e cole a chave acima (começa com <code>sk-...</code>)<br>
+        4. Requer saldo mínimo de ~$5 na conta
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:.5rem">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem">🔒 Segurança</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7">A chave é salva <strong>apenas no seu navegador</strong> (localStorage), nunca enviada para outros servidores. Toda comunicação é feita diretamente entre seu navegador e o provedor de IA escolhido.</p>
+    </div>
+  </div>
+
 </main>
 
 <!-- ════ MODAL ════ -->
@@ -848,6 +937,14 @@ function applyTheme(t) {
   localStorage.setItem('db_theme', t);
 }
 function toggleTheme() { applyTheme(theme === 'light' ? 'dark' : 'light'); }
+
+function initConfigPage() {
+  selectProvider(aiProvider);
+  if(apiKey) {
+    document.getElementById('api-key-input').placeholder = apiKey.slice(0,8)+'••••••••••••••••';
+  }
+  updateStatus();
+}
 
 // ── INIT ───────────────────────────────────────
 const today = new Date().toISOString().split('T')[0];
@@ -909,6 +1006,7 @@ function go(page) {
   document.getElementById('nav-'+page).classList.add('active');
   if(page==='historico') renderHistorico('todos');
   if(page==='exportar') renderExportStats();
+  if(page==='config') initConfigPage();
 }
 
 // ── ANOTAÇÃO ────────────────────────────────────
@@ -1223,13 +1321,71 @@ function promptRelatorio(ents,inicio,fim,ctx) {
   return `Relatório gerencial — ${fmtDate(inicio)} a ${fmtDate(fim)}\n${ctx?'Contexto: '+ctx:''}\n\nANOTAÇÕES (${notas.length}):\n${notas.map(e=>`• ${e.data}: ${e.text.slice(0,120)}`).join('\n')||'Nenhuma'}\n\nTÉCNICOS (${tec.length}):\n${tec.map(e=>`• ${e.data} – ${e.title}${e.extra?.tempo?' ('+e.extra.tempo+')':''}${e.extra?.impacto?' | '+e.extra.impacto:''}`).join('\n')||'Nenhum'}\n\nCOMPORTAMENTOS (${comp.length}):\n${comp.map(e=>`• ${e.data} – ${e.extra?.nome||''}: ${e.extra?.tipo||''} – ${e.title}`).join('\n')||'Nenhum'}\n${recStr?'Recorrências: '+recStr:''}\n\nIDEIAS (${ide.length}):\n${ide.map(e=>`• ${e.title}${e.extra?.problema?' | '+e.extra.problema:''}${e.extra?.ganho?' | '+e.extra.ganho:''}`).join('\n')||'Nenhuma'}\n\nCrie relatório profissional: 1) Resumo executivo 2) Análise técnica com impactos 3) Análise comportamental com padrões 4) Ideias e oportunidades 5) Recomendações. Pronto para slides. Português.`;
 }
 
+// ── CONFIG ───────────────────────────────────────
+let aiProvider = localStorage.getItem('db_provider') || 'gemini';
+let apiKey = localStorage.getItem('db_apikey') || '';
+
+function selectProvider(p) {
+  aiProvider = p;
+  localStorage.setItem('db_provider', p);
+  document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('prov-'+p).classList.add('selected');
+  document.getElementById('info-gemini').style.display = p==='gemini' ? 'block' : 'none';
+  document.getElementById('info-openai').style.display = p==='openai' ? 'block' : 'none';
+  updateStatus();
+}
+
+function toggleKeyVisibility() {
+  const inp = document.getElementById('api-key-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function salvarChave() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if(!key) { toast('Cole a chave antes de salvar.'); return; }
+  apiKey = key;
+  localStorage.setItem('db_apikey', key);
+  document.getElementById('api-key-input').value = '';
+  document.getElementById('api-key-input').placeholder = key.slice(0,8)+'••••••••••••••••';
+  updateStatus();
+  toast('Chave salva ✓ — IA pronta para uso');
+}
+
+function updateStatus() {
+  const el = document.getElementById('api-status');
+  if(!el) return;
+  if(!apiKey) {
+    el.className='api-status none'; el.textContent='Nenhuma chave configurada';
+  } else {
+    el.className='api-status ok';
+    el.textContent = (aiProvider==='gemini'?'✓ Gemini':'✓ OpenAI') + ' configurado — ' + apiKey.slice(0,8)+'••••';
+  }
+}
+
 // ── API ──────────────────────────────────────────
 async function callClaude(prompt) {
+  if(!apiKey) return 'Configure sua chave de API na página ⚙️ Configurar IA.';
   try {
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const d=await r.json();
-    return d.content?.map(b=>b.text||'').join('')||'Sem resposta.';
-  } catch(e) { return 'Erro ao conectar com a IA. Verifique a conexão.'; }
+    if(aiProvider === 'gemini') {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({contents:[{parts:[{text: prompt}]}]})
+      });
+      const d = await r.json();
+      if(d.error) return 'Erro Gemini: ' + d.error.message;
+      return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
+    } else {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey},
+        body: JSON.stringify({model:'gpt-4o-mini', max_tokens:1000, messages:[{role:'user',content:prompt}]})
+      });
+      const d = await r.json();
+      if(d.error) return 'Erro OpenAI: ' + d.error.message;
+      return d.choices?.[0]?.message?.content || 'Sem resposta.';
+    }
+  } catch(e) { return 'Erro ao conectar com a IA: ' + e.message; }
 }
 </script>
 </body>
