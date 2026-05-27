@@ -945,8 +945,12 @@ applyTheme(theme);
 function applyTheme(t) {
   theme = t;
   document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('theme-btn').textContent = t === 'light' ? '🌙' : '☀️';
-  document.getElementById('theme-btn').querySelector('.nav-tip').textContent = t === 'light' ? 'Modo noite' : 'Modo dia';
+  const btn = document.getElementById('theme-btn');
+  if(btn) {
+    btn.childNodes[0].textContent = t === 'light' ? '🌙' : '☀️';
+    const tip = btn.querySelector('.nav-tip');
+    if(tip) tip.textContent = t === 'light' ? 'Modo noite' : 'Modo dia';
+  }
   localStorage.setItem('db_theme', t);
 }
 function toggleTheme() { applyTheme(theme === 'light' ? 'dark' : 'light'); }
