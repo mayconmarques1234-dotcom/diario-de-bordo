@@ -861,7 +861,7 @@ select {
       <div class="field">
         <label>Chave de API</label>
         <div class="key-row">
-          <input type="password" id="api-key-input" placeholder="Cole sua chave aqui..." />
+          <input type="text" id="api-key-input" placeholder="Cole sua chave aqui..." autocomplete="off" autocorrect="off" spellcheck="false" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.04em" />
           <button class="btn btn-ghost btn-sm" onclick="toggleKeyVisibility()">👁</button>
           <button class="btn btn-primary btn-sm" onclick="salvarChave()">Salvar</button>
         </div>
@@ -1337,16 +1337,31 @@ function selectProvider(p) {
 
 function toggleKeyVisibility() {
   const inp = document.getElementById('api-key-input');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
+  // toggle masking via a data attr since we use text type
+  if(inp.dataset.masked === 'true') {
+    inp.dataset.masked = 'false';
+    inp.style.webkitTextSecurity = 'none';
+  } else {
+    inp.dataset.masked = 'true';
+    inp.style.webkitTextSecurity = 'disc';
+  }
 }
 
 function salvarChave() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if(!key) { toast('Cole a chave antes de salvar.'); return; }
+  const inp = document.getElementById('api-key-input');
+  const key = (inp.value || '').trim();
+  if(!key || key.length < 10) {
+    inp.style.borderColor = 'var(--red)';
+    toast('Cole a chave de API no campo antes de salvar.');
+    setTimeout(() => inp.style.borderColor = '', 2000);
+    return;
+  }
   apiKey = key;
   localStorage.setItem('db_apikey', key);
-  document.getElementById('api-key-input').value = '';
-  document.getElementById('api-key-input').placeholder = key.slice(0,8)+'••••••••••••••••';
+  inp.value = '';
+  inp.style.borderColor = 'var(--green)';
+  inp.placeholder = key.slice(0,10) + '••••••••••••';
+  setTimeout(() => inp.style.borderColor = '', 2000);
   updateStatus();
   toast('Chave salva ✓ — IA pronta para uso');
 }
